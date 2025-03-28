@@ -1,0 +1,824 @@
+﻿<Window x:Class="vmt_manager.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:vmt_manager"
+		Width="650"
+		Height="800"
+        mc:Ignorable="d"
+        Title="VMT Manager" Loaded="Window_Loaded" Closed="Window_Closed" ResizeMode="NoResize">
+	<DockPanel LastChildFill="True" Name="AllDockPanel">
+		<StatusBar DockPanel.Dock="Bottom" Name="StatusBar">
+			<StatusBarItem>
+				<DockPanel Width="650">
+					<TextBlock Padding="2,0,0,0" Name="StatusBarTextBlock" Text="Virtual Motion Tracker" FontWeight="Bold" DockPanel.Dock="Top" />
+					<TextBlock Padding="2,0,0,0" Name="StatusBarDashboardAlertTextBlock" Text="Steam VR Dashboard is opening. Button, Finger does not working.&#xA;SteamVR ダッシュボードが開いています。ボタン操作・指姿勢は無効です。" Background="Red" Foreground="White" FontWeight="Bold" DockPanel.Dock="Top" />
+				</DockPanel>
+			</StatusBarItem>
+		</StatusBar>
+		<TabControl DockPanel.Dock="Top" Name="MainTabControl">
+			<TabItem Header="Install">
+				<DockPanel LastChildFill="True">
+					<DockPanel.Background>
+						<LinearGradientBrush EndPoint="1,1" StartPoint="0,0">
+							<GradientStop Color="#FF636363" Offset="0"/>
+							<GradientStop Color="#FF111111" Offset="1"/>
+						</LinearGradientBrush>
+					</DockPanel.Background>
+					<DockPanel Name="TopErrorDockPanel" Background="Red" DockPanel.Dock="Top" Visibility="Collapsed">
+						<TextBlock Text="" Name="TopErrorTextBlock" DockPanel.Dock="Top" Foreground="White" TextWrapping="Wrap" />
+						<Button Content="Try fix it. / 修正を試みる" Name="TryFixItButton" DockPanel.Dock="Top" Background="Pink" Visibility="Collapsed" Click="FixItButton"/>
+					</DockPanel>
+					<TextBlock Text="VMT is not installed. Click install button to start use VMT.&#xA;VMTはインストールされていません。使い始めるにはInstallボタンを押してください。" Name="TopNotInstalledTextBlock" DockPanel.Dock="Top" Background="Green" Foreground="White" TextWrapping="Wrap" />
+					<Grid  DockPanel.Dock="Top" Margin="1" Name="InstallGrid" Height="50">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition/>
+							<ColumnDefinition/>
+						</Grid.ColumnDefinitions>
+						<Button Content="Install" Name="InstallButtonName" Click="InstallButton" Grid.Column="0" Margin="1" BorderThickness="3">
+							<Button.Background>
+								<LinearGradientBrush EndPoint="0,0" StartPoint="0,1">
+									<GradientStop Color="#55FF55" Offset="0"/>
+									<GradientStop Color="#CCFFCC" Offset="1"/>
+								</LinearGradientBrush>
+							</Button.Background>
+							<Button.BorderBrush>
+								<SolidColorBrush Color="#00CC00"/>
+							</Button.BorderBrush>
+						</Button>
+						<Button Content="Uninstall" Click="UninstallButton" Grid.Column="1" Margin="1" BorderThickness="3">
+							<Button.Background>
+								<LinearGradientBrush EndPoint="0,0" StartPoint="0,1">
+									<GradientStop Color="#FF5555" Offset="0"/>
+									<GradientStop Color="#FFCCCC" Offset="1"/>
+								</LinearGradientBrush>
+							</Button.Background>
+							<Button.BorderBrush>
+								<SolidColorBrush Color="#CC0000"/>
+							</Button.BorderBrush>
+						</Button>
+					</Grid>
+					<Grid  DockPanel.Dock="Top" Margin="1">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition/>
+							<ColumnDefinition/>
+						</Grid.ColumnDefinitions>
+						<Button Content="Enable Null Driver (Vitrual HMD)"  Click="EnableNullHMDDriverButton" Grid.Column="0" Margin="1"/>
+						<Button Content="Disable Null Driver (Vitrual HMD)" Click="DisableNullHMDDriverButton" Grid.Column="1" Margin="1"/>
+					</Grid>
+					<Grid DockPanel.Dock="Top" Margin="2">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition/>
+							<ColumnDefinition/>
+							<ColumnDefinition/>
+							<ColumnDefinition/>
+						</Grid.ColumnDefinitions>
+						<TextBlock HorizontalAlignment="Left" Text="Manager: " Grid.Column="0" Foreground="LightGray" />
+						<TextBlock Name="ManagerVersion"  Grid.Column="1" Foreground="LightGray" />
+						<TextBlock HorizontalAlignment="Left" Text="Driver: "  Grid.Column="2" Foreground="LightGray" />
+						<TextBlock Name="DriverVersion"  Grid.Column="3" Foreground="LightGray" />
+					</Grid>
+					<TextBlock DockPanel.Dock="Bottom" TextAlignment="Center" Margin="1" ><Hyperlink Foreground="IndianRed" NavigateUri="https://gpsnmeajp.github.io/VirtualMotionTrackerDocument/report/" RequestNavigate="Hyperlink_RequestNavigate">Send bug report.  不具合レポートを送る</Hyperlink></TextBlock>
+					<TextBlock DockPanel.Dock="Bottom" TextAlignment="Center" Margin="1"><Hyperlink Foreground="LightSkyBlue" NavigateUri="https://github.com/gpsnmeajp/VirtualMotionTracker" RequestNavigate="Hyperlink_RequestNavigate">https://github.com/gpsnmeajp/VirtualMotionTracker</Hyperlink></TextBlock>
+					<TextBlock DockPanel.Dock="Bottom" TextAlignment="Center" Margin="1" Foreground="Yellow" FontWeight="Bold" Text="No support provided. サポートは提供していません"></TextBlock>
+					<TextBlock DockPanel.Dock="Bottom" TextAlignment="Center" Margin="1" Foreground="White" Text="An easy-to-use virtual tracker driver for OpenVR. &#xA; With your own device, your own software, and any.&#xA;"></TextBlock>
+					<Image DockPanel.Dock="Bottom" Source="Resources/VMTlogo.png" Margin="20,5,20,0"/>
+				</DockPanel>
+			</TabItem>
+			<TabItem Header="RoomSetup" Height="22" VerticalAlignment="Bottom">
+				<DockPanel Name="ControlDock" IsEnabled="False">
+					<TextBlock TextAlignment="Center" Text="Initial setup &amp; Operation check" DockPanel.Dock="Top" Background="#EEEEEE" />
+					<Grid VerticalAlignment="Top">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition/>
+							<ColumnDefinition/>
+						</Grid.ColumnDefinitions>
+						<GroupBox Header="Room Seup (Required)" Grid.Column="0">
+							<DockPanel Margin="2"  LastChildFill="False">
+								<TextBlock Text="RoomMatrix" DockPanel.Dock="Top" Margin="1"/>
+								<TextBox Name="RoomMatrixTextBox" IsEnabled="False" IsReadOnly="True" Text="" DockPanel.Dock="Top" Height="69" Margin="1"/>
+								<CheckBox Content="Temporary" DockPanel.Dock="Top" Name="SetRoomMatrixTemporaryCheckBox"></CheckBox>
+								<Button Content="Set RoomMatrix" Height="80" DockPanel.Dock="Top" Name="SetRoomMatrixButtonName" Click="SetRoomMatrixButton" Margin="1" BorderThickness="3">
+									<Button.Background>
+										<LinearGradientBrush EndPoint="0,0" StartPoint="0,1">
+											<GradientStop Color="#55FF55" Offset="0"/>
+											<GradientStop Color="#CCFFCC" Offset="1"/>
+										</LinearGradientBrush>
+									</Button.Background>
+									<Button.BorderBrush>
+										<SolidColorBrush Color="#00CC00"/>
+									</Button.BorderBrush>
+								</Button>
+								<Button Content="Reset RoomMatrix" DockPanel.Dock="Top" Click="ResetRoomMatrixButton" Margin="1"/>
+							</DockPanel>
+						</GroupBox>
+						<GroupBox Header="Position Test" Grid.Column="1">
+							<DockPanel Margin="2" LastChildFill="False">
+								<TextBox Name="CheckPositionTextBox" IsEnabled="False" IsReadOnly="True" Text="-,-,-" DockPanel.Dock="Top" Margin="1"/>
+								<TextBlock Text="VMT_0 Raw Position" DockPanel.Dock="Top" Margin="1"/>
+								<TextBox Name="CheckPositionRawTextBox" IsEnabled="False" IsReadOnly="True" Text="-,-,-" DockPanel.Dock="Top" Margin="1"/>
+								<TextBlock Text="VMT_0 Speed" DockPanel.Dock="Top" Margin="1"/>
+								<TextBox Name="CheckPositionRawSpeedTextBox" IsEnabled="False" IsReadOnly="True" Text="-,-,-" DockPanel.Dock="Top" Margin="1"/>
+								<Button DockPanel.Dock="Top" Click="CheckPositionButton" Margin="1">
+									<TextBlock Text="Check VMT__0 Position(Room) &#xA;(Try set RoomPos=[1,1,1] )" TextAlignment="Center"/>
+								</Button>
+								<Button DockPanel.Dock="Top" Click="CheckPositionRawButton" Margin="1">
+									<TextBlock Text="Check VMT__0 Position(Raw) &#xA;(Try set RawPos=[1,1,1] )" TextAlignment="Center"/>
+								</Button>
+								<Button DockPanel.Dock="Top" Click="CheckTemplatePosition1Button" Margin="1">
+									<TextBlock Text="Set Hand Position (Room)&#xA;(VMT__1, VMT__2)" TextAlignment="Center"/>
+								</Button>
+								<TextBlock Text="VMT_0 Joint Serial No" DockPanel.Dock="Top" Margin="1"/>
+								<CheckBox Content="VMT_0 Position Vibration" Name="VMT_0_PositionVibrationCheckBox"  DockPanel.Dock="Top" Margin="1"/>
+								<TextBox Name="JointSerialNoTextBox" Text="HMD" DockPanel.Dock="Top" Margin="1"/>
+								<Button DockPanel.Dock="Top" Click="CheckJointPositionButton" Margin="1">
+									<TextBlock Text="Check VMT__0 Position &#xA;(Try set JointPos=[0.1,0.0,-0.5] )" TextAlignment="Center"/>
+								</Button>
+								<Button DockPanel.Dock="Top" Click="CheckJointPosition2Button" Margin="1">
+									<TextBlock Text="Check VMT__0 Position &#xA;(Try set FollowPos=[-0.1,0.0,-0.5] )" TextAlignment="Center"/>
+								</Button>
+								<Button DockPanel.Dock="Top" Click="CheckTemplatePosition1JointButton" Margin="1">
+									<TextBlock Text="Set Hand Position(Joint) &#xA;(VMT__1, VMT__2)" TextAlignment="Center"/>
+								</Button>
+								<Button DockPanel.Dock="Top" Click="CheckTemplatePosition1FollowButton" Margin="1">
+									<TextBlock Text="Set Hand Position(Follow) &#xA;(VMT__1, VMT__2)" TextAlignment="Center"/>
+								</Button>
+								<TextBlock Text="Position Coordinate" DockPanel.Dock="Top" Margin="1"/>
+								<ComboBox DockPanel.Dock="Top" Name="CoordinateCombo" SelectedIndex="0">
+									<ComboBoxItem>Driver Coordinate</ComboBoxItem>
+									<ComboBoxItem>Unity Coordinate</ComboBoxItem>
+								</ComboBox>
+							</DockPanel>
+						</GroupBox>
+					</Grid>
+				</DockPanel>
+			</TabItem>
+			<TabItem Header="Control">
+				<DockPanel>
+					<TextBlock TextAlignment="Center" Text="Control Command for all VMT Devices" DockPanel.Dock="Top" Background="#EEEEEE" />
+					<DockPanel Margin="2"  LastChildFill="False" Width="350">
+						<GroupBox Header="Volatile (Non save config)" DockPanel.Dock="Top">
+							<StackPanel>
+								<Button Content="Reload Setting" Click="ReloadJsonButton" Margin="1"/>
+								<Button Content="Device Reset" Click="ResetButton" Margin="1"/>
+								<Button Content="Show all" Click="ShowAllButton" Margin="1"/>
+								<Button Content="Request Restart (SteamVR)" Click="RequestRestartButton" Margin="1"/>
+								<Grid>
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition/>
+										<ColumnDefinition Width="50" />
+										<ColumnDefinition Width="50"/>
+									</Grid.ColumnDefinitions>
+									<Grid.RowDefinitions>
+										<RowDefinition/>
+										<RowDefinition/>
+									</Grid.RowDefinitions>
+									<TextBlock Text="Auto Pose Udate" Grid.Row="0" Grid.Column="0"/>
+									<Button Content="ON" Click="EnableAutoPoseUdateButton"  Grid.Row="0" Grid.Column="1" Margin="1"/>
+									<Button Content="OFF" Click="DisableAutoPoseUdateButton"  Grid.Row="0" Grid.Column="2" Margin="1"/>
+
+									<TextBlock Text="Diag log" Grid.Row="1" Grid.Column="0"/>
+									<Button Content="ON" Click="EnableDiaglogButton"  Grid.Row="1" Grid.Column="1" Margin="1"/>
+									<Button Content="OFF" Click="DisableDiaglogButton"  Grid.Row="1" Grid.Column="2" Margin="1"/>
+								</Grid>
+								<CheckBox Content="Load Testing" Name="LoadTestCheckBox" IsChecked="False" Checked="LoadTestCheckBoxEvent" Unchecked="LoadTestCheckBoxEvent" Margin="1"/>
+							</StackPanel>
+						</GroupBox>
+						<GroupBox Header="Non-Volatile (Save config)" DockPanel.Dock="Top" Margin="0,10,0,0">
+							<Grid>
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition/>
+									<ColumnDefinition Width="50" />
+									<ColumnDefinition Width="50"/>
+								</Grid.ColumnDefinitions>
+								<Grid.RowDefinitions>
+									<RowDefinition/>
+									<RowDefinition/>
+									<RowDefinition/>
+									<RowDefinition/>
+									<RowDefinition/>
+									<RowDefinition/>
+									<RowDefinition/>
+									<RowDefinition/>
+								</Grid.RowDefinitions>
+								<TextBlock Text="Optout Tracking Role" Grid.Row="0" Grid.Column="0"/>
+								<Button Content="ON" Click="EnableOptoutTrackingRoleButton" Grid.Row="0" Grid.Column="1" Margin="1"/>
+								<Button Content="OFF" Click="DisableOptoutTrackingRoleButton"  Grid.Row="0" Grid.Column="2" Margin="1"/>
+
+								<TextBlock Text="Reject When Cannot Tracking" Grid.Row="1" Grid.Column="0"/>
+								<Button Content="ON" Click="EnableRejectWhenCannotTrackingButton"  Grid.Row="1" Grid.Column="1" Margin="1"/>
+								<Button Content="OFF" Click="DisableRejectWhenCannotTrackingButton"  Grid.Row="1" Grid.Column="2" Margin="1"/>
+
+								<TextBlock Text="Skeleton Input" Grid.Row="2" Grid.Column="0"/>
+								<Button Content="ON" Click="EnableSkeletonInputButton"  Grid.Row="2" Grid.Column="1" Margin="1"/>
+								<Button Content="OFF" Click="DisableSkeletonInputButton"  Grid.Row="2" Grid.Column="2" Margin="1"/>
+
+								<TextBlock Text="Auto Pose Update On Startup" Grid.Row="3" Grid.Column="0"/>
+								<Button Content="ON" Click="EnableAutoPoseUpdateOnStartupButton"  Grid.Row="3" Grid.Column="1" Margin="1"/>
+								<Button Content="OFF" Click="DisableAutoPoseUpdateOnStartupButton"  Grid.Row="3" Grid.Column="2" Margin="1"/>
+
+								<TextBlock Text="Add Controller On Startup" Grid.Row="4" Grid.Column="0"/>
+								<Button Content="ON" Click="EnableAddControllerOnStartupButton"  Grid.Row="4" Grid.Column="1" Margin="1"/>
+								<Button Content="OFF" Click="DisableAddControllerOnStartupButton"  Grid.Row="4" Grid.Column="2" Margin="1"/>
+
+								<TextBlock Text="Add Compatible Controller On Startup" Grid.Row="5" Grid.Column="0"/>
+								<Button Content="ON" Click="EnableAddCompatibleControllerOnStartupButton" Grid.Row="5" Grid.Column="1" Margin="1"/>
+								<Button Content="OFF" Click="DisableAddCompatibleControllerOnStartupButton"  Grid.Row="5" Grid.Column="2" Margin="1"/>
+
+								<TextBlock Text="Diag Log On Startup" Grid.Row="6" Grid.Column="0"/>
+								<Button Content="ON" Click="EnableDiagLogOnStartupButton" Grid.Row="6" Grid.Column="1" Margin="1"/>
+								<Button Content="OFF" Click="DisableDiagLogOnStartupButton"  Grid.Row="6" Grid.Column="2" Margin="1"/>
+
+								<TextBlock Text="Always Compatible" Grid.Row="7" Grid.Column="0"/>
+								<Button Content="ON" Click="EnableAlwaysCompatibleButton" Grid.Row="7" Grid.Column="1" Margin="1"/>
+								<Button Content="OFF" Click="DisableAlwaysCompatibleButton"  Grid.Row="7" Grid.Column="2" Margin="1"/>
+							</Grid>
+						</GroupBox>
+						<GroupBox Header="Tracking Overrides" DockPanel.Dock="Top" Margin="0,10,0,0">
+							<StackPanel>
+								<TextBlock Text="From (Device path)"/>
+								<TextBox Name="TrackingOverridesFromTextBox" Text="/devices/vmt/VMT_0" />
+								<TextBlock Text="To (Device path, Semantic path)"/>
+								<TextBox Name="TrackingOverridesToTextBox"  Text="/user/head" />
+								<Button Name="TrackingOverridesAddButton" Content="Add" Margin="1" Click="TrackingOverridesAddButton_Click"/>
+								<Button Name="TrackingOverridesRemoveAllButton" Content="Remove All" Margin="1" Click="TrackingOverridesRemoveAllButton_Click"/>
+								<TextBlock Text='&#xA;If you want to override pose by VMT, Please set "VMT" to "From", "Target device" to "To".&#xA;&#xA;
+If you want to override button, axis, fingers by VMT, Please set "Target device" to "From", "VMT" to "To".' TextWrapping="Wrap"/>
+							</StackPanel>
+						</GroupBox>
+					</DockPanel>
+				</DockPanel>
+			</TabItem>
+			<TabItem Header="Input">
+				<DockPanel LastChildFill="False">
+					<TextBlock TextAlignment="Center" Text="Control panel for testing each VMT Devices" DockPanel.Dock="Top" Background="#EEEEEE" />
+					<GroupBox Header="Operation target (0～57)" DockPanel.Dock="Top">
+						<DockPanel Margin="1">
+							<TextBlock VerticalAlignment="Center" Text="VMT:" DockPanel.Dock="Left" Margin="1" />
+							<Button Content="Right(2)" Click="TargetRightButton" DockPanel.Dock="Right" Margin="3,1,1,1" Padding="5,1,5,1"/>
+							<Button Content="Left(1)" Click="TargetLeftButton" DockPanel.Dock="Right" Margin="3,1,1,1" Padding="5,1,5,1"/>
+							<Button Content="HMD(0)" Click="TargetHMDButton" DockPanel.Dock="Right" Margin="3,1,1,1" Padding="5,1,5,1"/>
+							<TextBox Name="InputVMTNoTextBox" Text="1" DockPanel.Dock="Left" Margin="1" />
+						</DockPanel>
+					</GroupBox>
+
+					<TabControl DockPanel.Dock="Top">
+						<TabItem Header="Button Axis Finger">
+							<DockPanel>
+								<GroupBox Header="Device registration (Only once each devices in one VR Session.)" DockPanel.Dock="Top">
+									<StackPanel>
+										<UniformGrid Columns="8" Rows="1">
+											<Button Margin="1" Click="DisableButton">
+												<TextBlock Text="[0]&#xa;Disable" TextAlignment="Center"/>
+											</Button>
+											<Button Margin="1" Click="TrackerButton">
+												<TextBlock Text="[1]&#xa;Tracker" TextAlignment="Center"/>
+											</Button>
+											<Button Margin="1" Click="LeftHandButton">
+												<TextBlock Text="[2] Left&#xa;Controller" TextAlignment="Center"/>
+											</Button>
+											<Button Margin="1" Click="RightHandButton">
+												<TextBlock Text="[3] Right&#xa;Controller" TextAlignment="Center"/>
+											</Button>
+											<Button Margin="1,1,8,1" Click="TrackingReferenceButton">
+												<TextBlock Text="[4] Tracking&#xa;Reference" TextAlignment="Center"/>
+											</Button>
+											<Button Margin="1" Click="LeftHandCompatibleButton">
+												<TextBlock Text="[5] Left&#xa;Compatible" TextAlignment="Center"/>
+											</Button>
+											<Button Margin="1" Click="RightHandCompatibleButton">
+												<TextBlock Text="[6] Right&#xa;Compatible" TextAlignment="Center"/>
+											</Button>
+											<Button Margin="1" Click="TrackerCompatibleButton">
+												<TextBlock Text="[7] Tracker&#xa;Compatible" TextAlignment="Center"/>
+											</Button>
+										</UniformGrid>
+										<UniformGrid Columns="8" Rows="1">
+												<TextBlock Text="┗"/>
+											<TextBlock Text=""/>
+											<TextBlock Text="VMT"/>
+											<TextBlock Text=""/>
+											<TextBlock Text="┛" TextAlignment="Right"/>
+											<TextBlock Text="┗"/>
+											<DockPanel>
+												<TextBlock Text="Index*" DockPanel.Dock="Left"/>
+												<TextBlock Text="┛" TextAlignment="Right" DockPanel.Dock="Right"/>
+											</DockPanel>
+										</UniformGrid>
+									</StackPanel>
+								</GroupBox>
+								<GroupBox Header="Button and Axis" DockPanel.Dock="Top" Height="350">
+									<TabControl>
+										<TabItem Header="Normal">
+											<Grid>
+												<Grid.ColumnDefinitions>
+													<ColumnDefinition/>
+													<ColumnDefinition/>
+													<ColumnDefinition/>
+												</Grid.ColumnDefinitions>
+												<DockPanel Grid.Column="0" Margin="2" LastChildFill="False">
+													<Grid DockPanel.Dock="Top">
+														<Grid.ColumnDefinitions>
+															<ColumnDefinition/>
+															<ColumnDefinition/>
+														</Grid.ColumnDefinitions>
+														<Grid.RowDefinitions>
+															<RowDefinition Height="38"/>
+															<RowDefinition Height="38"/>
+															<RowDefinition Height="31"/>
+															<RowDefinition Height="31"/>
+															<RowDefinition Height="31"/>
+															<RowDefinition Height="31"/>
+															<RowDefinition Height="31"/>
+															<RowDefinition Height="31"/>
+															<RowDefinition Height="31"/>
+														</Grid.RowDefinitions>
+														<Button PreviewMouseDown="Button0_MouseDown" PreviewMouseUp="Button0_MouseUp"  Margin="1" Grid.Column="0" Grid.Row="0" >
+															<TextBlock Text="Button 0&#xA;System" TextAlignment="Center"/>
+														</Button>
+														<Button PreviewMouseDown="Button1_MouseDown" PreviewMouseUp="Button1_MouseUp"  Margin="1" Grid.Column="1" Grid.Row="0">
+															<TextBlock Text="Button 1&#xA;A*" TextAlignment="Center"/>
+														</Button>
+														<Button PreviewMouseDown="Button2_MouseDown" PreviewMouseUp="Button2_MouseUp"  Margin="1" Grid.Column="0" Grid.Row="1" >
+															<TextBlock Text="Button 2&#xA;" TextAlignment="Center"/>
+														</Button>
+														<Button PreviewMouseDown="Button3_MouseDown" PreviewMouseUp="Button3_MouseUp"  Margin="1" Grid.Column="1" Grid.Row="1" >
+															<TextBlock Text="Button 3&#xA;B*" TextAlignment="Center"/>
+														</Button>
+														<Button PreviewMouseDown="Button4_MouseDown" PreviewMouseUp="Button4_MouseUp"  Margin="1" Grid.Column="0" Grid.Row="2" >
+															<TextBlock Text="Button 4" TextAlignment="Center"/>
+														</Button>
+														<Button Content="Button 5" PreviewMouseDown="Button5_MouseDown" PreviewMouseUp="Button5_MouseUp"  Margin="1" Grid.Column="1" Grid.Row="2" />
+														<Button Content="Button 6" PreviewMouseDown="Button6_MouseDown" PreviewMouseUp="Button6_MouseUp"  Margin="1" Grid.Column="0" Grid.Row="3" />
+														<Button Content="Button 7" PreviewMouseDown="Button7_MouseDown" PreviewMouseUp="Button7_MouseUp"  Margin="1" Grid.Column="1" Grid.Row="3" />
+														<Button Content="Button 8" PreviewMouseDown="Button8_MouseDown" PreviewMouseUp="Button8_MouseUp"  Margin="1" Grid.Column="0" Grid.Row="4" />
+														<Button Content="Button 9" PreviewMouseDown="Button9_MouseDown" PreviewMouseUp="Button9_MouseUp"  Margin="1" Grid.Column="1" Grid.Row="4" />
+														<Button Content="Button 10" PreviewMouseDown="Button10_MouseDown" PreviewMouseUp="Button10_MouseUp"  Margin="1" Grid.Column="0" Grid.Row="5" />
+														<Button Content="Button 11" PreviewMouseDown="Button11_MouseDown" PreviewMouseUp="Button11_MouseUp"  Margin="1" Grid.Column="1" Grid.Row="5" />
+														<Button Content="Button 12" PreviewMouseDown="Button12_MouseDown" PreviewMouseUp="Button12_MouseUp"  Margin="1" Grid.Column="0" Grid.Row="6" />
+														<Button Content="Button 13" PreviewMouseDown="Button13_MouseDown" PreviewMouseUp="Button13_MouseUp"  Margin="1" Grid.Column="1" Grid.Row="6" />
+														<Button Content="Button 14" PreviewMouseDown="Button14_MouseDown" PreviewMouseUp="Button14_MouseUp"  Margin="1" Grid.Column="0" Grid.Row="7" />
+														<Button Content="Button 15" PreviewMouseDown="Button15_MouseDown" PreviewMouseUp="Button15_MouseUp"  Margin="1" Grid.Column="1" Grid.Row="7" />
+														<Button Content="Button 16" PreviewMouseDown="Button16_MouseDown" PreviewMouseUp="Button16_MouseUp"  Margin="1" Grid.Column="0" Grid.Row="8" />
+														<Button Content="Button 17" PreviewMouseDown="Button17_MouseDown" PreviewMouseUp="Button17_MouseUp"  Margin="1" Grid.Column="1" Grid.Row="8" />
+													</Grid>
+												</DockPanel>
+												<DockPanel Grid.Column="1" Margin="2" LastChildFill="False">
+													<DockPanel DockPanel.Dock="Top" Margin="1">
+														<TextBlock Text="Trigger 0&#xA;Trigger*" DockPanel.Dock="Left" Width="55" />
+														<Slider Minimum="0" Maximum="1" Value="0" Name="Slider0" ValueChanged="Slider0_ValueChanged" DockPanel.Dock="Left"/>
+													</DockPanel>
+													<DockPanel DockPanel.Dock="Top" Margin="1">
+														<TextBlock Text="Trigger 1&#xA;Grip*" DockPanel.Dock="Left" Width="55" />
+														<Slider Minimum="0" Maximum="1" Value="0" Name="Slider1" ValueChanged="Slider1_ValueChanged" DockPanel.Dock="Left"/>
+													</DockPanel>
+													<DockPanel DockPanel.Dock="Top" Margin="1">
+														<TextBlock Text="Trigger 2&#xA;Force*" DockPanel.Dock="Left" Width="55" />
+														<Slider Minimum="0" Maximum="1" Value="0" Name="Slider2" ValueChanged="Slider2_ValueChanged" DockPanel.Dock="Left"/>
+													</DockPanel>
+													<DockPanel DockPanel.Dock="Top" Margin="1">
+														<TextBlock Text="Trigger 3&#xA;Index*" DockPanel.Dock="Left" Width="55" />
+														<Slider Minimum="0" Maximum="1" Value="0" Name="Slider3" ValueChanged="Slider3_ValueChanged" DockPanel.Dock="Left"/>
+													</DockPanel>
+													<DockPanel DockPanel.Dock="Top" Margin="1">
+														<TextBlock Text="Trigger 4&#xA;Middle*" DockPanel.Dock="Left" Width="55" />
+														<Slider Minimum="0" Maximum="1" Value="0" Name="Slider4" ValueChanged="Slider4_ValueChanged" DockPanel.Dock="Left"/>
+													</DockPanel>
+													<DockPanel DockPanel.Dock="Top" Margin="1">
+														<TextBlock Text="Trigger 5&#xA;Ring*" DockPanel.Dock="Left" Width="55" />
+														<Slider Minimum="0" Maximum="1" Value="0" Name="Slider5" ValueChanged="Slider5_ValueChanged" DockPanel.Dock="Left"/>
+													</DockPanel>
+													<DockPanel DockPanel.Dock="Top" Margin="1">
+														<TextBlock Text="Trigger 6&#xA;Pinky*" DockPanel.Dock="Left" Width="55" />
+														<Slider Minimum="0" Maximum="1" Value="0" Name="Slider6" ValueChanged="Slider6_ValueChanged" DockPanel.Dock="Left"/>
+													</DockPanel>
+													<DockPanel DockPanel.Dock="Top" Margin="1">
+														<TextBlock Text="Trigger 7&#xA;Trackpad*" DockPanel.Dock="Left" Width="55" />
+														<Slider Minimum="0" Maximum="1" Value="0" Name="Slider7" ValueChanged="Slider7_ValueChanged" DockPanel.Dock="Left"/>
+													</DockPanel>
+													<DockPanel DockPanel.Dock="Top" Margin="1">
+														<TextBlock Text="Trigger 8" DockPanel.Dock="Left" Width="55" />
+														<Slider Minimum="0" Maximum="1" Value="0" Name="Slider8" ValueChanged="Slider8_ValueChanged" DockPanel.Dock="Left"/>
+													</DockPanel>
+												</DockPanel>
+												<DockPanel Grid.Column="2" Margin="2" LastChildFill="False">
+													<DockPanel DockPanel.Dock="Top" Margin="1">
+														<TextBlock Text="Joystick0 X" DockPanel.Dock="Left" />
+														<Slider Minimum="-1" Maximum="1" Value="0" Name="SliderX" ValueChanged="SliderXY_ValueChanged" DockPanel.Dock="Left"/>
+													</DockPanel>
+													<DockPanel DockPanel.Dock="Top" Margin="1">
+														<TextBlock Text="Joystick0 Y" DockPanel.Dock="Left" />
+														<Slider Minimum="-1" Maximum="1" Value="0" Name="SliderY" ValueChanged="SliderXY_ValueChanged" DockPanel.Dock="Left"/>
+													</DockPanel>
+													<TextBlock Text="Trackpad*" DockPanel.Dock="Top" Margin="1,1,1,10" />
+													<DockPanel DockPanel.Dock="Top" Margin="1">
+														<TextBlock Text="Joystick1 X" DockPanel.Dock="Left" />
+														<Slider Minimum="-1" Maximum="1" Value="0" Name="SliderU" ValueChanged="SliderUV_ValueChanged" DockPanel.Dock="Left"/>
+													</DockPanel>
+													<DockPanel DockPanel.Dock="Top" Margin="1">
+														<TextBlock Text="Joystick1 Y" DockPanel.Dock="Left" />
+														<Slider Minimum="-1" Maximum="1" Value="0" Name="SliderV" ValueChanged="SliderUV_ValueChanged" DockPanel.Dock="Left"/>
+													</DockPanel>
+													<TextBlock Text="Thumb Stick*" DockPanel.Dock="Top" Margin="1,1,1,10" />
+													<DockPanel DockPanel.Dock="Top" Margin="1">
+														<TextBlock Text="Joystick2 X" DockPanel.Dock="Left" />
+														<Slider Minimum="-1" Maximum="1" Value="0" Name="SliderA" ValueChanged="SliderAB_ValueChanged" DockPanel.Dock="Left"/>
+													</DockPanel>
+													<DockPanel DockPanel.Dock="Top" Margin="1,1,1,10">
+														<TextBlock Text="Joystick2 Y" DockPanel.Dock="Left" />
+														<Slider Minimum="-1" Maximum="1" Value="0" Name="SliderB" ValueChanged="SliderAB_ValueChanged" DockPanel.Dock="Left"/>
+													</DockPanel>
+													<DockPanel DockPanel.Dock="Top" Margin="1">
+														<TextBlock Text="Joystick3 X" DockPanel.Dock="Left" />
+														<Slider Minimum="-1" Maximum="1" Value="0" Name="SliderC" ValueChanged="SliderCD_ValueChanged" DockPanel.Dock="Left"/>
+													</DockPanel>
+													<DockPanel DockPanel.Dock="Top" Margin="1,1,1,10">
+														<TextBlock Text="Joystick3 Y" DockPanel.Dock="Left" />
+														<Slider Minimum="-1" Maximum="1" Value="0" Name="SliderD" ValueChanged="SliderCD_ValueChanged" DockPanel.Dock="Left"/>
+													</DockPanel>
+													<Button Content="Slider Reset"  Margin="1,8,1,1" Height="50" Click="InputResetButton" DockPanel.Dock="Top"/>
+												</DockPanel>
+											</Grid>
+										</TabItem>
+										<TabItem Header="Touch">
+											<Grid>
+												<Grid.ColumnDefinitions>
+													<ColumnDefinition/>
+													<ColumnDefinition/>
+													<ColumnDefinition/>
+												</Grid.ColumnDefinitions>
+												<Grid.RowDefinitions>
+													<RowDefinition/>
+												</Grid.RowDefinitions>
+												<StackPanel Grid.Column="0" Background="#FFEEEE">
+													<Grid>
+														<Grid.ColumnDefinitions>
+															<ColumnDefinition/>
+															<ColumnDefinition/>
+														</Grid.ColumnDefinitions>
+														<Grid.RowDefinitions>
+															<RowDefinition/>
+															<RowDefinition/>
+															<RowDefinition/>
+															<RowDefinition/>
+															<RowDefinition/>
+															<RowDefinition/>
+															<RowDefinition/>
+															<RowDefinition/>
+															<RowDefinition/>
+														</Grid.RowDefinitions>
+
+														<CheckBox Content="Button0&#xA;Touch" Name="Button0TouchCheckBox" Grid.Column="0" Grid.Row="0" VerticalAlignment="Center" Checked="Button0TouchChecked" Unchecked="Button0TouchChecked" />
+														<CheckBox Content="Button1&#xA;Touch" Name="Button1TouchCheckBox" Grid.Column="1" Grid.Row="0" VerticalAlignment="Center" Checked="Button1TouchChecked" Unchecked="Button1TouchChecked" />
+														<CheckBox Content="Button2&#xA;Touch" Name="Button2TouchCheckBox" Grid.Column="0" Grid.Row="1" VerticalAlignment="Center" Checked="Button2TouchChecked" Unchecked="Button2TouchChecked" />
+														<CheckBox Content="Button3&#xA;Touch" Name="Button3TouchCheckBox" Grid.Column="1" Grid.Row="1" VerticalAlignment="Center" Checked="Button3TouchChecked" Unchecked="Button3TouchChecked" />
+														<CheckBox Content="Button4&#xA;Touch" Name="Button4TouchCheckBox" Grid.Column="0" Grid.Row="2" VerticalAlignment="Center" Checked="Button4TouchChecked" Unchecked="Button4TouchChecked" />
+														<CheckBox Content="Button5&#xA;Touch" Name="Button5TouchCheckBox" Grid.Column="1" Grid.Row="2" VerticalAlignment="Center" Checked="Button5TouchChecked" Unchecked="Button5TouchChecked" />
+														<CheckBox Content="Button6&#xA;Touch" Name="Button6TouchCheckBox" Grid.Column="0" Grid.Row="3" VerticalAlignment="Center" Checked="Button6TouchChecked" Unchecked="Button6TouchChecked" />
+														<CheckBox Content="Button7&#xA;Touch" Name="Button7TouchCheckBox" Grid.Column="1" Grid.Row="3" VerticalAlignment="Center" Checked="Button7TouchChecked" Unchecked="Button7TouchChecked" />
+														<CheckBox Content="Button8&#xA;Touch" Name="Button8TouchCheckBox" Grid.Column="0" Grid.Row="4" VerticalAlignment="Center" Checked="Button8TouchChecked" Unchecked="Button8TouchChecked" />
+														<CheckBox Content="Button9&#xA;Touch" Name="Button9TouchCheckBox" Grid.Column="1" Grid.Row="4" VerticalAlignment="Center" Checked="Button9TouchChecked" Unchecked="Button9TouchChecked" />
+														<CheckBox Content="Button10&#xA;Touch" Name="Button10TouchCheckBox" Grid.Column="0" Grid.Row="5" VerticalAlignment="Center" Checked="Button10TouchChecked" Unchecked="Button10TouchChecked" />
+														<CheckBox Content="Button11&#xA;Touch" Name="Button11TouchCheckBox" Grid.Column="1" Grid.Row="5" VerticalAlignment="Center" Checked="Button11TouchChecked" Unchecked="Button11TouchChecked" />
+														<CheckBox Content="Button12&#xA;Touch" Name="Button12TouchCheckBox" Grid.Column="0" Grid.Row="6" VerticalAlignment="Center" Checked="Button12TouchChecked" Unchecked="Button12TouchChecked" />
+														<CheckBox Content="Button13&#xA;Touch" Name="Button13TouchCheckBox" Grid.Column="1" Grid.Row="6" VerticalAlignment="Center" Checked="Button13TouchChecked" Unchecked="Button13TouchChecked" />
+														<CheckBox Content="Button14&#xA;Touch" Name="Button14TouchCheckBox" Grid.Column="0" Grid.Row="7" VerticalAlignment="Center" Checked="Button14TouchChecked" Unchecked="Button14TouchChecked" />
+														<CheckBox Content="Button15&#xA;Touch" Name="Button15TouchCheckBox" Grid.Column="1" Grid.Row="7" VerticalAlignment="Center" Checked="Button15TouchChecked" Unchecked="Button15TouchChecked" />
+														<CheckBox Content="Button16&#xA;Touch" Name="Button16TouchCheckBox" Grid.Column="0" Grid.Row="8" VerticalAlignment="Center" Checked="Button16TouchChecked" Unchecked="Button16TouchChecked" />
+														<CheckBox Content="Button17&#xA;Touch" Name="Button17TouchCheckBox" Grid.Column="1" Grid.Row="8" VerticalAlignment="Center" Checked="Button17TouchChecked" Unchecked="Button17TouchChecked" />
+													</Grid>
+												</StackPanel>
+
+												<StackPanel Grid.Column="1" Background="#EEFFEE">
+													<Grid>
+														<Grid.ColumnDefinitions>
+															<ColumnDefinition/>
+															<ColumnDefinition/>
+														</Grid.ColumnDefinitions>
+														<Grid.RowDefinitions>
+															<RowDefinition/>
+															<RowDefinition/>
+															<RowDefinition/>
+															<RowDefinition/>
+															<RowDefinition/>
+															<RowDefinition/>
+															<RowDefinition/>
+															<RowDefinition/>
+															<RowDefinition/>
+														</Grid.RowDefinitions>
+
+														<CheckBox Content="Trigger0&#xA;Touch" Name="Trigger0TouchCheckBox" Grid.Column="0" Grid.Row="0" VerticalAlignment="Center" Checked="Trigger0TouchChecked" Unchecked="Trigger0TouchChecked" />
+														<CheckBox Content="Trigger1&#xA;Touch" Name="Trigger1TouchCheckBox" Grid.Column="0" Grid.Row="1" VerticalAlignment="Center" Checked="Trigger1TouchChecked" Unchecked="Trigger1TouchChecked" />
+														<CheckBox Content="Trigger2&#xA;Touch" Name="Trigger2TouchCheckBox" Grid.Column="0" Grid.Row="2" VerticalAlignment="Center" Checked="Trigger2TouchChecked" Unchecked="Trigger2TouchChecked" />
+														<CheckBox Content="Trigger3&#xA;Touch" Name="Trigger3TouchCheckBox" Grid.Column="0" Grid.Row="3" VerticalAlignment="Center" Checked="Trigger3TouchChecked" Unchecked="Trigger3TouchChecked" />
+														<CheckBox Content="Trigger4&#xA;Touch" Name="Trigger4TouchCheckBox" Grid.Column="0" Grid.Row="4" VerticalAlignment="Center" Checked="Trigger4TouchChecked" Unchecked="Trigger4TouchChecked" />
+														<CheckBox Content="Trigger5&#xA;Touch" Name="Trigger5TouchCheckBox" Grid.Column="0" Grid.Row="5" VerticalAlignment="Center" Checked="Trigger5TouchChecked" Unchecked="Trigger5TouchChecked" />
+														<CheckBox Content="Trigger6&#xA;Touch" Name="Trigger6TouchCheckBox" Grid.Column="0" Grid.Row="6" VerticalAlignment="Center" Checked="Trigger6TouchChecked" Unchecked="Trigger6TouchChecked" />
+														<CheckBox Content="Trigger7&#xA;Touch" Name="Trigger7TouchCheckBox" Grid.Column="0" Grid.Row="7" VerticalAlignment="Center" Checked="Trigger7TouchChecked" Unchecked="Trigger7TouchChecked" />
+														<CheckBox Content="Trigger8&#xA;Touch" Name="Trigger8TouchCheckBox" Grid.Column="0" Grid.Row="8" VerticalAlignment="Center" Checked="Trigger8TouchChecked" Unchecked="Trigger8TouchChecked" />
+
+														<CheckBox Content="Trigger0&#xA;Click" Name="Trigger0ClickCheckBox" Grid.Column="1" Grid.Row="0" VerticalAlignment="Center" Checked="Trigger0ClickChecked" Unchecked="Trigger0ClickChecked" />
+														<CheckBox Content="Trigger1&#xA;Click" Name="Trigger1ClickCheckBox" Grid.Column="1" Grid.Row="1" VerticalAlignment="Center" Checked="Trigger1ClickChecked" Unchecked="Trigger1ClickChecked" />
+														<CheckBox Content="Trigger2&#xA;Click" Name="Trigger2ClickCheckBox" Grid.Column="1" Grid.Row="2" VerticalAlignment="Center" Checked="Trigger2ClickChecked" Unchecked="Trigger2ClickChecked" />
+														<CheckBox Content="Trigger3&#xA;Click" Name="Trigger3ClickCheckBox" Grid.Column="1" Grid.Row="3" VerticalAlignment="Center" Checked="Trigger3ClickChecked" Unchecked="Trigger3ClickChecked" />
+														<CheckBox Content="Trigger4&#xA;Click" Name="Trigger4ClickCheckBox" Grid.Column="1" Grid.Row="4" VerticalAlignment="Center" Checked="Trigger4ClickChecked" Unchecked="Trigger4ClickChecked" />
+														<CheckBox Content="Trigger5&#xA;Click" Name="Trigger5ClickCheckBox" Grid.Column="1" Grid.Row="5" VerticalAlignment="Center" Checked="Trigger5ClickChecked" Unchecked="Trigger5ClickChecked" />
+														<CheckBox Content="Trigger6&#xA;Click" Name="Trigger6ClickCheckBox" Grid.Column="1" Grid.Row="6" VerticalAlignment="Center" Checked="Trigger6ClickChecked" Unchecked="Trigger6ClickChecked" />
+														<CheckBox Content="Trigger7&#xA;Click" Name="Trigger7ClickCheckBox" Grid.Column="1" Grid.Row="7" VerticalAlignment="Center" Checked="Trigger7ClickChecked" Unchecked="Trigger7ClickChecked" />
+														<CheckBox Content="Trigger8&#xA;Click" Name="Trigger8ClickCheckBox" Grid.Column="1" Grid.Row="8" VerticalAlignment="Center" Checked="Trigger8ClickChecked" Unchecked="Trigger8ClickChecked" />
+													</Grid>
+												</StackPanel>
+
+												<StackPanel Grid.Column="2" Background="#EEEEFF">
+													<Grid>
+														<Grid.ColumnDefinitions>
+															<ColumnDefinition/>
+															<ColumnDefinition/>
+														</Grid.ColumnDefinitions>
+														<Grid.RowDefinitions>
+															<RowDefinition/>
+															<RowDefinition/>
+															<RowDefinition/>
+															<RowDefinition/>
+															<RowDefinition/>
+															<RowDefinition/>
+															<RowDefinition/>
+															<RowDefinition/>
+															<RowDefinition/>
+														</Grid.RowDefinitions>
+
+														<CheckBox Content="Joystick0&#xA;Touch" Name="Joystick0TouchCheckBox" Grid.Column="0" Grid.Row="0" VerticalAlignment="Center" Checked="Joystick0TouchChecked" Unchecked="Joystick0TouchChecked" />
+														<Border Grid.Column="0" Grid.Row="1" Height="31"/>
+														<CheckBox Content="Joystick1&#xA;Touch" Name="Joystick1TouchCheckBox" Grid.Column="0" Grid.Row="2" VerticalAlignment="Center" Checked="Joystick1TouchChecked" Unchecked="Joystick1TouchChecked" />
+														<Border Grid.Column="0" Grid.Row="3" Height="31"/>
+														<CheckBox Content="Joystick2&#xA;Touch" Name="Joystick2TouchCheckBox" Grid.Column="0" Grid.Row="4" VerticalAlignment="Center" Checked="Joystick2TouchChecked" Unchecked="Joystick2TouchChecked" />
+														<Border Grid.Column="0" Grid.Row="5" Height="31"/>
+														<CheckBox Content="Joystick3&#xA;Touch" Name="Joystick3TouchCheckBox" Grid.Column="0" Grid.Row="6" VerticalAlignment="Center" Checked="Joystick3TouchChecked" Unchecked="Joystick3TouchChecked" />
+
+														<CheckBox Content="Joystick0&#xA;Click" Name="Joystick0ClickCheckBox" Grid.Column="1" Grid.Row="0" VerticalAlignment="Center" Checked="Joystick0ClickChecked" Unchecked="Joystick0ClickChecked" />
+														<CheckBox Content="Joystick1&#xA;Click" Name="Joystick1ClickCheckBox" Grid.Column="1" Grid.Row="2" VerticalAlignment="Center" Checked="Joystick1ClickChecked" Unchecked="Joystick1ClickChecked" />
+														<CheckBox Content="Joystick2&#xA;Click" Name="Joystick2ClickCheckBox" Grid.Column="1" Grid.Row="4" VerticalAlignment="Center" Checked="Joystick2ClickChecked" Unchecked="Joystick2ClickChecked" />
+														<CheckBox Content="Joystick3&#xA;Click" Name="Joystick3ClickCheckBox" Grid.Column="1" Grid.Row="6" VerticalAlignment="Center" Checked="Joystick3ClickChecked" Unchecked="Joystick3ClickChecked" />
+													</Grid>
+												</StackPanel>
+											</Grid>
+										</TabItem>
+									</TabControl>
+								</GroupBox>
+
+								<GroupBox Header="Finger control (scalar value)" DockPanel.Dock="Top">
+									<DockPanel>
+										<DockPanel DockPanel.Dock="Top" Margin="1">
+											<TextBlock Text="Root Wrist" DockPanel.Dock="Left" Width="80" />
+											<Slider Minimum="0" Maximum="1" Value="0" Name="RootAndWristSlider" ValueChanged="RootAndWristSlider_ValueChanged" DockPanel.Dock="Left"/>
+										</DockPanel>
+										<DockPanel DockPanel.Dock="Top" Margin="1">
+											<TextBlock Text="Thumb" DockPanel.Dock="Left" Width="80" />
+											<Slider Minimum="0" Maximum="1" Value="0" Name="ThumbSlider" ValueChanged="ThumbSlider_ValueChanged" DockPanel.Dock="Left"/>
+										</DockPanel>
+										<DockPanel DockPanel.Dock="Top" Margin="1">
+											<TextBlock Text="Index" DockPanel.Dock="Left" Width="80" />
+											<Slider Minimum="0" Maximum="1" Value="0" Name="IndexSlider" ValueChanged="IndexSlider_ValueChanged" DockPanel.Dock="Left"/>
+										</DockPanel>
+										<DockPanel DockPanel.Dock="Top" Margin="1">
+											<TextBlock Text="Middle" DockPanel.Dock="Left" Width="80" />
+											<Slider Minimum="0" Maximum="1" Value="0" Name="MiddleSlider" ValueChanged="MiddleSlider_ValueChanged" DockPanel.Dock="Left"/>
+										</DockPanel>
+										<DockPanel DockPanel.Dock="Top" Margin="1">
+											<TextBlock Text="Ring" DockPanel.Dock="Left" Width="80" />
+											<Slider Minimum="0" Maximum="1" Value="0" Name="RingSlider" ValueChanged="RingSlider_ValueChanged" DockPanel.Dock="Left"/>
+										</DockPanel>
+										<DockPanel DockPanel.Dock="Top" Margin="1">
+											<TextBlock Text="Pinky Little" DockPanel.Dock="Left" Width="80" />
+											<Slider Minimum="0" Maximum="1" Value="0" Name="PinkyLittleSlider" ValueChanged="PinkyLittleSlider_ValueChanged" DockPanel.Dock="Left"/>
+										</DockPanel>
+										<CheckBox Content="(Reserved)" Name="AxisLinkingEnableCheckBox"/>
+									</DockPanel>
+								</GroupBox>
+							</DockPanel>
+						</TabItem>
+						<TabItem Header="Position">
+							<DockPanel>
+								<GroupBox Header="Position" DockPanel.Dock="Top">
+									<DockPanel Margin="1">
+										<DockPanel DockPanel.Dock="Top">
+											<Button Content="Send" Name="InputPositionSendButton" Click="InputPositionSendButton_Click" DockPanel.Dock="Right" Margin="0,4,0,4" Padding="16,0,16,0"/>
+											<ComboBox Name="InputPositionComboBox" SelectionChanged="InputPositionComboBox_SelectionChanged"  DockPanel.Dock="Left" Margin="0,4,5,4">
+												<ComboBoxItem>/VMT/Room/Unity</ComboBoxItem>
+												<ComboBoxItem>/VMT/Room/UEuler</ComboBoxItem>
+												<ComboBoxItem>/VMT/Room/Driver</ComboBoxItem>
+												<ComboBoxItem>/VMT/Raw/Unity</ComboBoxItem>
+												<ComboBoxItem>/VMT/Raw/UEuler</ComboBoxItem>
+												<ComboBoxItem>/VMT/Raw/Driver</ComboBoxItem>
+												<ComboBoxItem>/VMT/Joint/Unity</ComboBoxItem>
+												<ComboBoxItem>/VMT/Joint/UEuler</ComboBoxItem>
+												<ComboBoxItem>/VMT/Joint/Driver</ComboBoxItem>
+												<ComboBoxItem>/VMT/Follow/Unity</ComboBoxItem>
+												<ComboBoxItem>/VMT/Follow/UEuler</ComboBoxItem>
+												<ComboBoxItem>/VMT/Follow/Driver</ComboBoxItem>
+												<ComboBoxItem>/VMT/Skeleton/Unity</ComboBoxItem>
+												<ComboBoxItem>/VMT/Skeleton/UEuler</ComboBoxItem>
+												<ComboBoxItem>/VMT/Skeleton/Driver</ComboBoxItem>
+												<ComboBoxItem>/VMT/Skeleton/Scalar</ComboBoxItem>
+												<ComboBoxItem>/VMT/Skeleton/Apply</ComboBoxItem>
+											</ComboBox>
+										</DockPanel>
+										<DockPanel DockPanel.Dock="Top">
+											<TextBlock Text="Enable" DockPanel.Dock="Left" TextAlignment="Center" Margin="0,3,0,0" />
+											<TextBox Text="1" Name="InputPositionEnableTextBox" DockPanel.Dock="Left"  Margin="5,3,5,0" />
+										</DockPanel>
+
+										<Grid DockPanel.Dock="Top">
+											<Grid.ColumnDefinitions>
+												<ColumnDefinition Width="50" />
+												<ColumnDefinition/>
+												<ColumnDefinition Width="30"/>
+												<ColumnDefinition Width="50"/>
+												<ColumnDefinition />
+												<ColumnDefinition Width="0"/>
+												<ColumnDefinition Width="50"/>
+												<ColumnDefinition />
+												<ColumnDefinition Width="35"/>
+											</Grid.ColumnDefinitions>
+											<Grid.RowDefinitions>
+												<RowDefinition/>
+												<RowDefinition/>
+												<RowDefinition/>
+												<RowDefinition/>
+												<RowDefinition/>
+												<RowDefinition/>
+												<RowDefinition/>
+												<RowDefinition/>
+												<RowDefinition/>
+												<RowDefinition/>
+												<RowDefinition/>
+											</Grid.RowDefinitions>
+											<TextBlock Text="X" Grid.Column="0" Grid.Row="0" TextAlignment="Center" Margin="0,3,0,0" />
+											<TextBox Text="0.0" Name="InputPositionXTextBox" Grid.Column="1" Grid.Row="0" Margin="5,3,5,0" />
+											<TextBlock Text="m" Grid.Column="2" Grid.Row="0" Margin="0,3,0,0" />
+
+											<TextBlock Text="Y" Grid.Column="0" Grid.Row="1" TextAlignment="Center" Margin="0,3,0,0" />
+											<TextBox Text="0.0" Name="InputPositionYTextBox" Grid.Column="1" Grid.Row="1" Margin="5,3,5,0" />
+											<TextBlock Text="m" Grid.Column="2" Grid.Row="1" Margin="0,3,0,0" />
+
+											<TextBlock Text="Z" Grid.Column="0" Grid.Row="2" TextAlignment="Center" Margin="0,3,0,0" />
+											<TextBox Text="0.0" Name="InputPositionZTextBox" Grid.Column="1" Grid.Row="2" Margin="5,3,5,0" />
+											<TextBlock Text="m" Grid.Column="2" Grid.Row="2" Margin="0,3,0,0" />
+
+											<TextBlock Text="serial" Grid.Column="0" Grid.Row="3" TextAlignment="Center" Margin="0,3,0,0" />
+											<TextBox Text="HMD" Name="InputPositionSerialTextBox" Grid.Column="1" Grid.Row="3" Margin="5,3,5,0" />
+
+											<TextBlock Text="mode" Grid.Column="0" Grid.Row="4" TextAlignment="Center" Margin="0,3,0,0" />
+											<TextBox Text="0" Name="InputPositionModeTextBox" Grid.Column="1" Grid.Row="4" Margin="5,3,5,0" />
+
+											<TextBlock Text="qX" Grid.Column="3" Grid.Row="0" TextAlignment="Center" Margin="0,3,0,0" />
+											<TextBox Text="0.0" Name="InputPositionQXTextBox" Grid.Column="4" Grid.Row="0" Margin="5,3,5,0" />
+
+											<TextBlock Text="qY" Grid.Column="3" Grid.Row="1" TextAlignment="Center" Margin="0,3,0,0" />
+											<TextBox Text="0.0" Name="InputPositionQYTextBox" Grid.Column="4" Grid.Row="1" Margin="5,3,5,0" />
+
+											<TextBlock Text="qZ" Grid.Column="3" Grid.Row="2" TextAlignment="Center" Margin="0,3,0,0" />
+											<TextBox Text="0.0" Name="InputPositionQZTextBox" Grid.Column="4" Grid.Row="2" Margin="5,3,5,0" />
+
+											<TextBlock Text="qW" Grid.Column="3" Grid.Row="3" TextAlignment="Center" Margin="0,3,0,0" />
+											<TextBox Text="1.0" Name="InputPositionQWTextBox" Grid.Column="4" Grid.Row="3" Margin="5,3,5,0" />
+
+											<TextBlock Text="Bone" Grid.Column="3" Grid.Row="4" TextAlignment="Center" Margin="0,3,0,0" />
+											<TextBox Text="0" Name="InputPositionBoneTextBox" Grid.Column="4" Grid.Row="4" Margin="5,3,5,0" />
+
+											<TextBlock Text="Aixis Link" Grid.Column="6" Grid.Row="4" TextAlignment="Right" Margin="0,3,0,0" />
+											<TextBox Text="1" Name="InputPositionAixisLinkTextBox" Grid.Column="7" Grid.Row="4" Margin="5,3,5,0" />
+
+											<TextBlock Text="rX" Grid.Column="6" Grid.Row="0" TextAlignment="Center" Margin="0,3,0,0" />
+											<TextBox Text="0.0" Name="InputPositionRXTextBox" Grid.Column="7" Grid.Row="0" Margin="5,3,5,0" />
+											<TextBlock Text="deg" Grid.Column="8" Grid.Row="0" Margin="0,3,0,0" />
+
+											<TextBlock Text="rY" Grid.Column="6" Grid.Row="1" TextAlignment="Center" Margin="0,3,0,0" />
+											<TextBox Text="0.0" Name="InputPositionRYTextBox" Grid.Column="7" Grid.Row="1" Margin="5,3,5,0" />
+											<TextBlock Text="deg" Grid.Column="8" Grid.Row="1" Margin="0,3,0,0" />
+
+											<TextBlock Text="rZ" Grid.Column="6" Grid.Row="2" TextAlignment="Center" Margin="0,3,0,0" />
+											<TextBox Text="0.0" Name="InputPositionRZTextBox" Grid.Column="7" Grid.Row="2" Margin="5,3,5,0" />
+											<TextBlock Text="deg" Grid.Column="8" Grid.Row="2" Margin="0,3,0,0" />
+
+											<TextBlock Text="value" Grid.Column="6" Grid.Row="3" TextAlignment="Center" Margin="0,3,0,0" />
+											<TextBox Text="0.0" Name="InputPositionValueTextBox" Grid.Column="7" Grid.Row="3" Margin="5,3,5,0" />
+											<TextBlock Text="(0～1)" Grid.Column="8" Grid.Row="3" Margin="0,3,0,0" />
+										</Grid>
+									</DockPanel>
+								</GroupBox>
+							</DockPanel>
+						</TabItem>
+						<TabItem Header="Other">
+							<DockPanel>
+								<GroupBox Header="Haptic monitor" DockPanel.Dock="Top">
+									<DockPanel Margin="1">
+										<TextBlock VerticalAlignment="Center" Text="Haptic:" DockPanel.Dock="Left" Margin="0,0,5,0" />
+										<Button Content="Haptic Test"  Margin="5,0,0,0" Padding="5,0,5,0" Click="HapticTestButton" DockPanel.Dock="Right"/>
+										<TextBox Name="InputVMTHapticTextBox" Text="-" IsReadOnly="True" IsEnabled="False" />
+									</DockPanel>
+								</GroupBox>
+								<GroupBox Header="Debug Command (See driver source code.)" DockPanel.Dock="Top">
+									<DockPanel Margin="1">
+										<TextBlock VerticalAlignment="Center" Text="Debug:" DockPanel.Dock="Left" Margin="0,0,5,0" />
+										<Button Content="Send"  Margin="5,0,0,0" Padding="5,0,5,0" Click="DebugCommandButton" DockPanel.Dock="Right"/>
+										<TextBox Name="InputVMTDebugTextBox" PreviewKeyDown="InputVMTDebugTextBox_PreviewKeyDown" Text="" />
+									</DockPanel>
+								</GroupBox>
+							</DockPanel>
+						</TabItem>
+					</TabControl>
+				</DockPanel>
+			</TabItem>
+			<TabItem Header="Device">
+				<DockPanel>
+					<TextBlock TextAlignment="Center" Text="OpenVR Device list" DockPanel.Dock="Top" Background="#EEEEEE" />
+					<Grid DockPanel.Dock="Top">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition/>
+							<ColumnDefinition/>
+						</Grid.ColumnDefinitions>
+						<DockPanel LastChildFill="True" Grid.Column="0">
+							<Button Content="Reload" Margin="1" Click="DeviceReloadButton" DockPanel.Dock="Top"/>
+							<Button Content="Copy to Clipboard" Margin="1" Click="DeviceCopyButton" DockPanel.Dock="Top"/>
+							<ListView Name="DeviceListView" Margin="1" DockPanel.Dock="Top"/>
+						</DockPanel>
+						<DockPanel LastChildFill="True" Grid.Column="1">
+							<DockPanel DockPanel.Dock="Top">
+								<TextBlock Text="Serial" Margin="2,0,2,0" DockPanel.Dock="Left" VerticalAlignment="Center"/>
+								<Button Content="Unsubscribe" Margin="1" Click="DeviceUnsubscribeButton" DockPanel.Dock="Right"/>
+								<Button Content="Subscribe" Margin="1" Click="DeviceSubscribeButton" DockPanel.Dock="Right"/>
+								<TextBox Name="SubscribeDeviceSerialTextBox" DockPanel.Dock="Left"/>
+							</DockPanel>
+							<ListView Name="SubscribedDeviceListView" Margin="1" DockPanel.Dock="Top"/>
+						</DockPanel>
+					</Grid>
+				</DockPanel>
+			</TabItem>
+			<TabItem Header="Settings">
+				<DockPanel>
+					<TextBlock TextAlignment="Center" Text="Driver Settings (Need reload to apply, Some value requires restart SteamVR.)" DockPanel.Dock="Top" Background="#EEEEEE" />
+					<Button Content="Reload Setting" DockPanel.Dock="Bottom" Click="ReloadJsonButton" Margin="1"/>
+					<DockPanel LastChildFill="True">
+
+						<Button Content="Load json editor" Margin="1" Click="JsonLoadButton" DockPanel.Dock="Top"/>
+						<Button Content="Save json editor" Margin="1" Click="JsonSaveButton" DockPanel.Dock="Top"/>
+						<TextBox Name="JsonTextBox" Margin="1" DockPanel.Dock="Top" VerticalScrollBarVisibility="Visible"/>
+					</DockPanel>
+				</DockPanel>
+			</TabItem>
+			<TabItem Header="Tips">
+				<DockPanel LastChildFill="True">
+					<TextBlock TextAlignment="Center" Text="Steam VR Tips" DockPanel.Dock="Top" Background="#EEEEEE" />
+					<TabControl>
+						<TabItem Header="View log">
+							<DockPanel>
+								<TextBlock TextAlignment="Center" Text="How to view logs" DockPanel.Dock="Top" Background="#EEEEEE" />
+								<Image Source="Resources/logs.png" />
+							</DockPanel>
+						</TabItem>
+						<TabItem Header="Disabe standby">
+							<DockPanel>
+								<TextBlock TextAlignment="Center" Text="How to disable HMD Standby" DockPanel.Dock="Top" Background="#EEEEEE" />
+								<Image Source="Resources/disableStandby.png" />
+							</DockPanel>
+						</TabItem>
+					</TabControl>
+				</DockPanel>
+			</TabItem>
+			<TabItem Header="Manager">
+				<DockPanel LastChildFill="True">
+					<TextBlock TextAlignment="Center" DockPanel.Dock="Top" Background="#EEEEEE" ><Run Text="VMT Manager Settings"/><Run Text=" (Temporary)"/></TextBlock>
+					<DockPanel DockPanel.Dock="Top" LastChildFill="False">
+						<DockPanel LastChildFill="True" DockPanel.Dock="Top">
+							<TextBlock DockPanel.Dock="Left" Margin="2">VMT Manager IP Address:</TextBlock>
+							<TextBox Name="ManagerIPAddressTextBox"  Margin="1" DockPanel.Dock="Right" Text="127.0.0.1"/>
+						</DockPanel>
+						<DockPanel LastChildFill="True" DockPanel.Dock="Top">
+							<TextBlock DockPanel.Dock="Left" Margin="2">VMT Manager Port:</TextBlock>
+							<TextBox Name="ManagerPortTextBox"  Margin="1" DockPanel.Dock="Right" Text="39571"/>
+						</DockPanel>
+						<DockPanel LastChildFill="True" DockPanel.Dock="Top">
+							<TextBlock DockPanel.Dock="Left" Margin="2">VMT Driver IP Address:</TextBlock>
+							<TextBox Name="DriverIPAddressTextBox"  Margin="1" Text="127.0.0.1"/>
+						</DockPanel>
+						<DockPanel LastChildFill="True" DockPanel.Dock="Top">
+							<TextBlock DockPanel.Dock="Left" Margin="2">VMT Driver Port:</TextBlock>
+							<TextBox Name="DriverPortTextBox"  Margin="1"  Text="39570"/>
+						</DockPanel>
+						<Button Click="IPAddressChangeButton" Content="Change" DockPanel.Dock="Top" Margin="1" />
+						<TextBlock FontWeight="Bold" TextWrapping="Wrap">
+							CAUTION: This change is affect to OSC communications ONLY. <LineBreak/>
+							<LineBreak/>
+							Some configuration function has not work well or cause something funny result If you use this to other machine VR System's VMT Driver.<LineBreak/>
+							(Eg, Install, Uninstall, Null driver, RoomMatrix.)<LineBreak/>
+							<LineBreak/>
+							You should only use for communication debugging.
+						</TextBlock>
+					</DockPanel>
+				</DockPanel>
+			</TabItem>
+		</TabControl>
+	</DockPanel>
+</Window>
