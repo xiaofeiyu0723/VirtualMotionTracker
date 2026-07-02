@@ -24,6 +24,31 @@ SOFTWARE.
 #include "TrackedDeviceServerDriver.h"
 
 namespace VMTDriver {
+    const double SkeletonSplayMaxRadians = 35.0 * M_PI / 180.0;
+
+    bool TryGetSkeletonSplayBone(uint32_t finger, uint32_t& bone)
+    {
+        switch ((SkeletonLerpFinder)finger) {
+        case SkeletonLerpFinder::Thumb:
+            bone = (uint32_t)SkeletonBone::Thumb0_ThumbProximal;
+            return true;
+        case SkeletonLerpFinder::Index:
+            bone = (uint32_t)SkeletonBone::IndexFinger1_IndexIntermediate;
+            return true;
+        case SkeletonLerpFinder::Middle:
+            bone = (uint32_t)SkeletonBone::MiddleFinger1_MiddleIntermediate;
+            return true;
+        case SkeletonLerpFinder::Ring:
+            bone = (uint32_t)SkeletonBone::RingFinger1_RingIntermediate;
+            return true;
+        case SkeletonLerpFinder::PinkyLittle:
+            bone = (uint32_t)SkeletonBone::PinkyFinger1_LittleIntermediate;
+            return true;
+        default:
+            return false;
+        }
+    }
+
     const VRBoneTransform_t BindHandParentSpaceBonesLeft[skeletonBoneCount] = {
         {{0.00000000f,0.00000000f,0.00000000f,1.00000000f},{1.00000000f,0.00000000f,0.00000000f,0.00000000f}},
         {{-0.03403769f,0.03650266f,0.16472160f,1.00000000f},{-0.05514664f,-0.07860815f,-0.92027930f,0.37929630f}},
@@ -682,6 +707,10 @@ namespace VMTDriver {
             return;
         }
 
+        if (finger < 6) {
+            m_skeletonFingerCurl[finger] = t;
+        }
+
         if (m_controllerRole == ControllerRole::Left) {
             switch ((SkeletonLerpFinder)finger) {
             case SkeletonLerpFinder::RootAndWrist:
@@ -780,9 +809,67 @@ namespace VMTDriver {
                 break;
             }
         }
+
+        ApplySkeletonInputBufferSplayFinger(finger);
     }
 
     //仮想デバイスからデバイスバッファへ指定Indexのボーンについて指定の骨格をLerpした値を書き込む
+    void TrackedDeviceServerDriver::WriteSkeletonInputBufferSplayFinger(uint32_t finger, double splay)
+    {
+        if (!m_alreadyRegistered) { return; }
+        if (m_controllerRole == ControllerRole::None) { return; }
+
+        uint32_t boneIndex = 0;
+        if (!TryGetSkeletonSplayBone(finger, boneIndex)) {
+            LogError("Finger out of range for splay: %u", finger);
+            return;
+        }
+
+        if (splay < -1.0 || splay > 1.0) {
+            splay = 0.0;
+        }
+        m_skeletonFingerSplay[finger] = splay;
+        ApplySkeletonInputBufferSplayFinger(finger);
+    }
+
+    void TrackedDeviceServerDriver::ApplySkeletonInputBufferSplayFinger(uint32_t finger)
+    {
+        if (!m_alreadyRegistered) { return; }
+        if (m_controllerRole == ControllerRole::None) { return; }
+
+        uint32_t boneIndex = 0;
+        if (!TryGetSkeletonSplayBone(finger, boneIndex)) { return; }
+
+        if (m_controllerRole == ControllerRole::Left) {
+            WriteSkeletonInputBufferStaticLerpBone(
+                FistParentSpaceBonesLeft,
+                OpenHandParentSpaceBonesLeft,
+                boneIndex,
+                m_skeletonFingerCurl[finger]);
+        }
+        else {
+            WriteSkeletonInputBufferStaticLerpBone(
+                FistParentSpaceBonesRight,
+                OpenHandParentSpaceBonesRight,
+                boneIndex,
+                m_skeletonFingerCurl[finger]);
+        }
+
+        const double splay = m_skeletonFingerSplay[finger];
+        if (splay == 0.0) { return; }
+
+        VRBoneTransform_t& bone = m_boneTransform[boneIndex];
+        Eigen::Quaterniond base(bone.orientation.w, bone.orientation.x, bone.orientation.y, bone.orientation.z);
+        Eigen::Quaterniond splayRotation(Eigen::AngleAxisd(splay * SkeletonSplayMaxRadians, Eigen::Vector3d::UnitY()));
+        Eigen::Quaterniond result = base * splayRotation;
+        result.normalize();
+
+        bone.orientation.x = (float)result.x();
+        bone.orientation.y = (float)result.y();
+        bone.orientation.z = (float)result.z();
+        bone.orientation.w = (float)result.w();
+    }
+
     void TrackedDeviceServerDriver::WriteSkeletonInputBufferStaticLerpBone(const VRBoneTransform_t a[], const VRBoneTransform_t b[], uint32_t index, double t)
     {
         if (!m_alreadyRegistered) { return; }
@@ -901,6 +988,10 @@ namespace VMTDriver {
         }
 
         //骨格初期値を設定(コントローラのみ)
+        for (int i = 0; i < 6; i++) {
+            m_skeletonFingerCurl[i] = 1.0;
+            m_skeletonFingerSplay[i] = 0.0;
+        }
         WriteSkeletonInputBufferStatic(SkeletonBonePoseStatic::BindHand);
         UpdateSkeletonInput(0);
     }

@@ -129,6 +129,8 @@ namespace VMTDriver {
         RawPose m_rawPose{ 0 };
 
         VRBoneTransform_t m_boneTransform[skeletonBoneCount]{ 0 };
+        double m_skeletonFingerCurl[6]{ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
+        double m_skeletonFingerSplay[6]{ 0 };
 
         VRInputComponentHandle_t ButtonComponent[buttonCount]{ 0 };
         VRInputComponentHandle_t ButtonTouchComponent[buttonCount]{ 0 };
@@ -148,6 +150,8 @@ namespace VMTDriver {
         ETrackedDeviceClass m_deviceClass{ ETrackedDeviceClass::TrackedDeviceClass_Invalid };
         ControllerRole m_controllerRole{ ControllerRole::None };
         bool m_poweron{ false };
+
+        void ApplySkeletonInputBufferSplayFinger(uint32_t finger);
 
         static bool s_autoUpdate;
     public:
@@ -176,6 +180,7 @@ namespace VMTDriver {
 
         void WriteSkeletonInputBuffer(uint32_t index, VRBoneTransform_t bone);
         void WriteSkeletonInputBufferStaticLerpFinger(uint32_t finger, double t, uint32_t mode);
+        void WriteSkeletonInputBufferSplayFinger(uint32_t finger, double splay);
         void WriteSkeletonInputBufferStaticLerpBone(const VRBoneTransform_t a[], const VRBoneTransform_t b[], uint32_t index, double t);
         void WriteSkeletonInputBufferStatic(SkeletonBonePoseStatic type);
         void UpdateSkeletonInput(double timeoffset);

@@ -346,6 +346,15 @@ namespace VMTDriver {
 					}
 				}
 			}
+			else if (adr == "/VMT/Skeleton/Splay")
+			{
+				args >> idx >> i >> x >> osc::EndMessage;
+				LogIfDiag("%s : %d : %d : %f", adr.c_str(), idx, i, x);
+				if (GetServer()->IsVMTDeviceIndex(idx))
+				{
+					GetServer()->GetDevice(idx).WriteSkeletonInputBufferSplayFinger(i, x);
+				}
+			}
 			else if (adr == "/VMT/Skeleton/Apply")
 			{
 				args >> idx >> timeoffset >> osc::EndMessage;
