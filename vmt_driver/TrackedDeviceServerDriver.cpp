@@ -290,6 +290,11 @@ namespace VMTDriver {
 
         //自動更新が有効なら内部姿勢を保存するのみ。(OpenVR姿勢はフレームごとに自動更新されるため)
         m_rawPose = rawPose;
+        if (m_rawPose.enable == 0) {
+            Reset();
+            return;
+        }
+
         if (!s_autoUpdate) {
             //自動更新が無効ならば内部姿勢を保存し、OpenVR姿勢を更新する
             SetPose(RawPoseToPose());
@@ -455,7 +460,7 @@ namespace VMTDriver {
         if (m_rawPose.enable == 0) {
             pose.deviceIsConnected = false;
             pose.poseIsValid = false;
-            pose.result = ETrackingResult::TrackingResult_Calibrating_OutOfRange;
+            pose.result = ETrackingResult::TrackingResult_Uninitialized;
             //デバイス = 非接続・無効
             return pose;
         }
@@ -962,14 +967,12 @@ namespace VMTDriver {
         m_poweron = false; //電源オフ状態にする
 
         if (!m_alreadyRegistered) { return; }
-        DriverPose_t pose{ 0 };
-        pose.qRotation = VMTDriver::HmdQuaternion_Identity;
-        pose.qWorldFromDriverRotation = VMTDriver::HmdQuaternion_Identity;
-        pose.qDriverFromHeadRotation = VMTDriver::HmdQuaternion_Identity;
+        DriverPose_t pose = m_pose;
         pose.deviceIsConnected = false;
         pose.poseIsValid = false;
-        pose.result = ETrackingResult::TrackingResult_Calibrating_OutOfRange;
+        pose.result = ETrackingResult::TrackingResult_Uninitialized;
         SetPose(pose);
+        UpdatePoseToVRSystem();
 
         //全状態を初期化する
         for (int i = 0; i < buttonCount; i++) {
@@ -993,7 +996,6 @@ namespace VMTDriver {
             m_skeletonFingerSplay[i] = 0.0;
         }
         WriteSkeletonInputBufferStatic(SkeletonBonePoseStatic::BindHand);
-        UpdateSkeletonInput(0);
     }
 
     //デバッグコマンド処理(VMT Managerから送られてくる)
@@ -1155,14 +1157,14 @@ namespace VMTDriver {
             //コントローラロールヒントを設定
             LogIfETrackedPropertyError(VRProperties()->SetInt32Property(m_propertyContainer, Prop_ControllerRoleHint_Int32, ETrackedControllerRole::TrackedControllerRole_LeftHand));
             //指ボーン制限なし(既定の握りこぶしを使用)
-            LogIfEVRInputError(VRDriverInput()->CreateSkeletonComponent(m_propertyContainer, "/input/skeleton/left", "/skeleton/hand/left", "/pose/raw", EVRSkeletalTrackingLevel::VRSkeletalTracking_Full, nullptr, 0, &SkeletonComponent));
+            LogIfEVRInputError(VRDriverInput()->CreateSkeletonComponent(m_propertyContainer, "/input/skeleton/left", "/skeleton/hand/left", "/pose/raw", EVRSkeletalTrackingLevel::VRSkeletalTracking_Partial, nullptr, 0, &SkeletonComponent));
         }
         else if (m_controllerRole == ControllerRole::Right) {
             LogInfo("Skeleton: %s", "Right");
             //コントローラロールヒントを設定
             LogIfETrackedPropertyError(VRProperties()->SetInt32Property(m_propertyContainer, Prop_ControllerRoleHint_Int32, ETrackedControllerRole::TrackedControllerRole_RightHand));
             //指ボーン制限なし(既定の握りこぶしを使用)
-            LogIfEVRInputError(VRDriverInput()->CreateSkeletonComponent(m_propertyContainer, "/input/skeleton/right", "/skeleton/hand/right", "/pose/raw", EVRSkeletalTrackingLevel::VRSkeletalTracking_Full, nullptr, 0, &SkeletonComponent));
+            LogIfEVRInputError(VRDriverInput()->CreateSkeletonComponent(m_propertyContainer, "/input/skeleton/right", "/skeleton/hand/right", "/pose/raw", EVRSkeletalTrackingLevel::VRSkeletalTracking_Partial, nullptr, 0, &SkeletonComponent));
         }
         else {
             if (Config::GetInstance()->GetOptoutTrackingRole()) {
