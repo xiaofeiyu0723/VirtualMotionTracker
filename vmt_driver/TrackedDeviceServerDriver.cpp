@@ -277,6 +277,14 @@ namespace VMTDriver {
         m_index = idx;
     }
 
+    EVRSkeletalTrackingLevel TrackedDeviceServerDriver::GetSkeletonTrackingLevel() const
+    {
+        if (m_index == 3 || m_index == 4) {
+            return EVRSkeletalTrackingLevel::VRSkeletalTracking_Partial;
+        }
+        return EVRSkeletalTrackingLevel::VRSkeletalTracking_Full;
+    }
+
     //仮想デバイスにOpenVR姿勢を設定
     void TrackedDeviceServerDriver::SetPose(DriverPose_t pose)
     {
@@ -1157,14 +1165,14 @@ namespace VMTDriver {
             //コントローラロールヒントを設定
             LogIfETrackedPropertyError(VRProperties()->SetInt32Property(m_propertyContainer, Prop_ControllerRoleHint_Int32, ETrackedControllerRole::TrackedControllerRole_LeftHand));
             //指ボーン制限なし(既定の握りこぶしを使用)
-            LogIfEVRInputError(VRDriverInput()->CreateSkeletonComponent(m_propertyContainer, "/input/skeleton/left", "/skeleton/hand/left", "/pose/raw", EVRSkeletalTrackingLevel::VRSkeletalTracking_Partial, nullptr, 0, &SkeletonComponent));
+            LogIfEVRInputError(VRDriverInput()->CreateSkeletonComponent(m_propertyContainer, "/input/skeleton/left", "/skeleton/hand/left", "/pose/raw", GetSkeletonTrackingLevel(), nullptr, 0, &SkeletonComponent));
         }
         else if (m_controllerRole == ControllerRole::Right) {
             LogInfo("Skeleton: %s", "Right");
             //コントローラロールヒントを設定
             LogIfETrackedPropertyError(VRProperties()->SetInt32Property(m_propertyContainer, Prop_ControllerRoleHint_Int32, ETrackedControllerRole::TrackedControllerRole_RightHand));
             //指ボーン制限なし(既定の握りこぶしを使用)
-            LogIfEVRInputError(VRDriverInput()->CreateSkeletonComponent(m_propertyContainer, "/input/skeleton/right", "/skeleton/hand/right", "/pose/raw", EVRSkeletalTrackingLevel::VRSkeletalTracking_Partial, nullptr, 0, &SkeletonComponent));
+            LogIfEVRInputError(VRDriverInput()->CreateSkeletonComponent(m_propertyContainer, "/input/skeleton/right", "/skeleton/hand/right", "/pose/raw", GetSkeletonTrackingLevel(), nullptr, 0, &SkeletonComponent));
         }
         else {
             if (Config::GetInstance()->GetOptoutTrackingRole()) {

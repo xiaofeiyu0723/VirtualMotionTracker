@@ -193,6 +193,7 @@ namespace VMTDriver {
         void ProcessEvent(VREvent_t &VREvent);
 
         static void SetAutoUpdate(bool enable);
+        EVRSkeletalTrackingLevel GetSkeletonTrackingLevel() const;
 
         //OpenVR向け
         virtual EVRInitError Activate(uint32_t unObjectId) override;
